@@ -104,7 +104,7 @@ static void ili9486_pipe_enable(struct drm_simple_display_pipe *pipe,
 				struct drm_plane_state *plane_state)
 {
 	struct mipi_dbi_dev *dbidev = drm_to_mipi_dbi_dev(pipe->crtc.dev);
-	mipi_dbi_enable_flush(&dbidev->dbi, crtc_state, plane_state);
+	mipi_dbi_enable_flush(dbidev, crtc_state, plane_state);
 }
 
 static const struct drm_simple_display_pipe_funcs ili9486_pipe_funcs = {
