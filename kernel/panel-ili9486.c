@@ -11,98 +11,70 @@
 
 #include <linux/delay.h>
 #include <linux/module.h>
-#include <linux/spi/spi.h>
+#include <drm/drm_atomic_helper.h>
 
-#include <drm/drm_mipi_dbi.h>
-#include <drm/drm_print.h>
-#include <drm/drm_drv.h>
-#include <drm/drm_gem_dma_helper.h>
-#include <drm/drm_probe_helper.h>
+/* ... (previous includes) ... */
 
-/*
- * ILI9486 commands
+/* 
+ * ILI9486 init sequence using explicit mipi_dbi_command calls 
+ * to be compatible with Kernel 6.12+ which changed mipi_dbi_command_buf API
  */
-#define ILI9486_ITF_CTR		0xb0
-#define ILI9486_FRMCTR1		0xb1
-#define ILI9486_DISCTRL		0xb6
-#define ILI9486_PWCTRL1		0xc0
-#define ILI9486_PWCTRL2		0xc1
-#define ILI9486_PWCTRL3		0xc2
-#define ILI9486_VMCTRL		0xc5
-#define ILI9486_PGAMCTRL	0xe0
-#define ILI9486_NGAMCTRL	0xe1
+static int ili9486_init(struct mipi_dbi *dbi)
+{
+	int ret;
 
-static const u8 ili9486_init_sequence[] = {
 	/* Interface Mode Control */
-	MIPI_DBI_DCS_ADDR(ILI9486_ITF_CTR),
-	0x00,
+	ret = mipi_dbi_command(dbi, ILI9486_ITF_CTR, 0x00);
+	if (ret) return ret;
 
 	/* Sleep Out */
-	MIPI_DCS_EXIT_SLEEP_MODE,
-	MIPI_DBI_DCS_DELAY_MS(120),
+	ret = mipi_dbi_command(dbi, MIPI_DCS_EXIT_SLEEP_MODE);
+	if (ret) return ret;
+	msleep(120);
 
 	/* Pixel Format: 16 bpp */
-	MIPI_DCS_SET_PIXEL_FORMAT,
-	0x55,
+	ret = mipi_dbi_command(dbi, MIPI_DCS_SET_PIXEL_FORMAT, 0x55);
+	if (ret) return ret;
 
 	/* Power Control 1 */
-	MIPI_DBI_DCS_ADDR(ILI9486_PWCTRL1),
-	0x0d, 0x0d,
+	ret = mipi_dbi_command(dbi, ILI9486_PWCTRL1, 0x0d, 0x0d);
+	if (ret) return ret;
 
 	/* Power Control 2 */
-	MIPI_DBI_DCS_ADDR(ILI9486_PWCTRL2),
-	0x43,
+	ret = mipi_dbi_command(dbi, ILI9486_PWCTRL2, 0x43);
+	if (ret) return ret;
 
 	/* Power Control 3 */
-	MIPI_DBI_DCS_ADDR(ILI9486_PWCTRL3),
-	0x00,
+	ret = mipi_dbi_command(dbi, ILI9486_PWCTRL3, 0x00);
+	if (ret) return ret;
 
 	/* VCOM Control */
-	MIPI_DBI_DCS_ADDR(ILI9486_VMCTRL),
-	0x00, 0x42, 0x80,
+	ret = mipi_dbi_command(dbi, ILI9486_VMCTRL, 0x00, 0x42, 0x80);
+	if (ret) return ret;
 
 	/* Display Function Control */
-	MIPI_DBI_DCS_ADDR(ILI9486_DISCTRL),
-	0x00, 0x02, 0x3b,
+	ret = mipi_dbi_command(dbi, ILI9486_DISCTRL, 0x00, 0x02, 0x3b);
+	if (ret) return ret;
 
 	/* Positive Gamma Control */
-	MIPI_DBI_DCS_ADDR(ILI9486_PGAMCTRL),
-	0x0f, 0x24, 0x1c, 0x0a, 0x0f, 0x08, 0x43, 0x88,
-	0x32, 0x0f, 0x10, 0x06, 0x0f, 0x07, 0x00,
+	ret = mipi_dbi_command(dbi, ILI9486_PGAMCTRL, 
+		0x0f, 0x24, 0x1c, 0x0a, 0x0f, 0x08, 0x43, 0x88,
+		0x32, 0x0f, 0x10, 0x06, 0x0f, 0x07, 0x00);
+	if (ret) return ret;
 
 	/* Negative Gamma Control */
-	MIPI_DBI_DCS_ADDR(ILI9486_NGAMCTRL),
-	0x0f, 0x38, 0x2e, 0x0a, 0x0f, 0x08, 0x53, 0x88,
-	0x32, 0x0f, 0x11, 0x06, 0x0f, 0x07, 0x00,
+	ret = mipi_dbi_command(dbi, ILI9486_NGAMCTRL,
+		0x0f, 0x38, 0x2e, 0x0a, 0x0f, 0x08, 0x53, 0x88,
+		0x32, 0x0f, 0x11, 0x06, 0x0f, 0x07, 0x00);
+	if (ret) return ret;
 
 	/* Display On */
-	MIPI_DCS_SET_DISPLAY_ON,
-	MIPI_DBI_DCS_DELAY_MS(100),
-};
+	ret = mipi_dbi_command(dbi, MIPI_DCS_SET_DISPLAY_ON);
+	if (ret) return ret;
+	msleep(100);
 
-static const struct drm_simple_display_pipe_funcs ili9486_pipe_funcs = {
-	.enable = mipi_dbi_pipe_enable,
-	.disable = mipi_dbi_pipe_disable,
-	.update = mipi_dbi_pipe_update,
-};
-
-static const struct drm_display_mode ili9486_mode = {
-	DRM_SIMPLE_MODE(480, 320, 73, 49),
-};
-
-DEFINE_DRM_GEM_DMA_FOPS(ili9486_fops);
-
-static const struct drm_driver ili9486_driver = {
-	.driver_features	= DRIVER_GEM | DRIVER_MODESET | DRIVER_ATOMIC,
-	.fops			= &ili9486_fops,
-	DRM_GEM_DMA_DRIVER_OPS_WITH_DUMB_CREATE(mipi_dbi_debugfs_init,
-						&ili9486_driver),
-	.name			= "ili9486",
-	.desc			= "Ilitek ILI9486",
-	.date			= "20240130",
-	.major			= 1,
-	.minor			= 0,
-};
+	return 0;
+}
 
 static int ili9486_probe(struct spi_device *spi)
 {
@@ -137,26 +109,17 @@ static int ili9486_probe(struct spi_device *spi)
 	if (ret)
 		return ret;
 
-	/* 
-	 * ILI9486 often requires a specific rotation.
-	 * 0/180/90/270 can be set via device tree 'rotation' property.
-	 * Standard init is usually portrait or landscape depending on scan direction.
-	 */
 	ret = mipi_dbi_dev_init(dbidev, &ili9486_pipe_funcs, &ili9486_mode, 0);
 	if (ret)
 		return ret;
 
 	drm_mode_config_reset(drm);
 
-	ret = mipi_dbi_command_buf(dbi, ili9486_init_sequence,
-				   ARRAY_SIZE(ili9486_init_sequence));
+	ret = ili9486_init(dbi);
 	if (ret) {
 		dev_err(dev, "Failed to send init sequence\n");
 		return ret;
 	}
-	
-	/* Enable backlight if available */
-	// Backlight is usually handled by mipi_dbi_dev_init if 'backlight' is in DT
 
 	return drm_dev_register(drm, 0);
 }
