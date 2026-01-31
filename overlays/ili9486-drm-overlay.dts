@@ -22,7 +22,7 @@
 		target = <&gpio>;
 		__overlay__ {
 			ili9486_pins: ili9486_pins {
-				brcm,pins = <25 27>;
+				brcm,pins = <24 25>;
 				brcm,function = <1 1>; /* out */
 			};
 		};
@@ -46,8 +46,8 @@
 				bgr;
 				fps = <30>;
 				buswidth = <8>;
-				dc-gpios = <&gpio 25 0>;
-				reset-gpios = <&gpio 27 0>;
+				dc-gpios = <&gpio 24 0>;
+				reset-gpios = <&gpio 25 0>;
 				debug = <0>;
 			};
 		};

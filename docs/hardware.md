@@ -13,7 +13,7 @@
 | 23 (SCLK)| 23 (SPI0 SCLK) | SPI Clock |
 | 24 (T_CS)| 26 (SPI0 CE1) | Touch Chip Select |
 | 26 (CS)  | 24 (SPI0 CE0) | LCD Chip Select |
-| 18 (RS/DC)| 22 (GPIO 25) | Data/Command |
-| 22 (RST) | 13 (GPIO 27) | Reset |
+| 18 (RS/DC)| 18 (GPIO 24) | Data/Command |
+| 22 (RST) | 22 (GPIO 25) | Reset |
 
 *Note: Pinout is based on standard Waveshare 3.5" (B) / (C) type displays. Verify your specific module.*
