@@ -15,6 +15,9 @@
 
 #include <drm/drm_mipi_dbi.h>
 #include <drm/drm_print.h>
+#include <drm/drm_drv.h>
+#include <drm/drm_gem_dma_helper.h>
+#include <drm/drm_probe_helper.h>
 
 /*
  * ILI9486 commands
