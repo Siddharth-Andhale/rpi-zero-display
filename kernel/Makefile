@@ -1,20 +1,17 @@
 # Makefile for panel-ili9486
 
-# If KERNELRELEASE is defined, we've been invoked from the
-# kernel build system and can use its language.
-ifneq ($(KERNELRELEASE),)
-	obj-m += panel-ili9486.o
-
-# Otherwise we were called directly from the command
-# line; invoke the kernel build system.
-else
-	KERNEL_VER ?= $(shell uname -r)
-	KDIR ?= /lib/modules/$(KERNEL_VER)/build
-	PWD := $(shell pwd)
-
+# Default target for manual build
 all:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+# Dedicated target for DKMS to avoid KERNELRELEASE confusion
+dkms:
+	make -C /lib/modules/$(KERNEL_VER)/build M=$(PWD) modules
 
 clean:
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+
+# Kbuild part: strictly for when invoked by kernel build system
+ifneq ($(KERNELRELEASE),)
+	obj-m += panel-ili9486.o
 endif
