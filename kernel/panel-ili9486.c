@@ -21,7 +21,18 @@
 #include <drm/drm_probe_helper.h>
 #include <drm/drm_atomic_helper.h>
 
-/* ... (previous includes) ... */
+/*
+ * ILI9486 commands
+ */
+#define ILI9486_ITF_CTR		0xb0
+#define ILI9486_FRMCTR1		0xb1
+#define ILI9486_DISCTRL		0xb6
+#define ILI9486_PWCTRL1		0xc0
+#define ILI9486_PWCTRL2		0xc1
+#define ILI9486_PWCTRL3		0xc2
+#define ILI9486_VMCTRL		0xc5
+#define ILI9486_PGAMCTRL	0xe0
+#define ILI9486_NGAMCTRL	0xe1
 
 /* 
  * ILI9486 init sequence using explicit mipi_dbi_command calls 
@@ -83,6 +94,30 @@ static int ili9486_init(struct mipi_dbi *dbi)
 
 	return 0;
 }
+
+static const struct drm_simple_display_pipe_funcs ili9486_pipe_funcs = {
+	.enable = mipi_dbi_pipe_enable,
+	.disable = mipi_dbi_pipe_disable,
+	.update = mipi_dbi_pipe_update,
+};
+
+static const struct drm_display_mode ili9486_mode = {
+	DRM_SIMPLE_MODE(480, 320, 73, 49),
+};
+
+DEFINE_DRM_GEM_DMA_FOPS(ili9486_fops);
+
+static const struct drm_driver ili9486_driver = {
+	.driver_features	= DRIVER_GEM | DRIVER_MODESET | DRIVER_ATOMIC,
+	.fops			= &ili9486_fops,
+	DRM_GEM_DMA_DRIVER_OPS_WITH_DUMB_CREATE(mipi_dbi_debugfs_init,
+						&ili9486_driver),
+	.name			= "ili9486",
+	.desc			= "Ilitek ILI9486",
+	.date			= "20240130",
+	.major			= 1,
+	.minor			= 0,
+};
 
 static int ili9486_probe(struct spi_device *spi)
 {
