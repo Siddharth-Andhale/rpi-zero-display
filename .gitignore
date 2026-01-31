@@ -1,0 +1,19 @@
+# Development Docs
+plan_of_action.md
+task.md
+implementation_plan.md
+walkthrough.md
+
+# Build Artifacts
+*.o
+*.ko
+*.mod.c
+*.order
+*.symvers
+.*.cmd
+.tmp_versions/
+*.dtbo
+
+# Editor files
+.vscode/
+*.swp

@@ -17,8 +17,8 @@ This repository provides a **modern, DRM/KMS-based** solution for running ILI948
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/rpi-ili9486-drm.git
-   cd rpi-ili9486-drm
+   git clone https://github.com/Siddharth-Andhale/rpi-zero-display.git
+   cd rpi-zero-display
    ```
 
 2. Run the installer:
