@@ -11,6 +11,14 @@
 
 #include <linux/delay.h>
 #include <linux/module.h>
+#include <linux/spi/spi.h>
+#include <linux/gpio/consumer.h>
+
+#include <drm/drm_mipi_dbi.h>
+#include <drm/drm_print.h>
+#include <drm/drm_drv.h>
+#include <drm/drm_gem_dma_helper.h>
+#include <drm/drm_probe_helper.h>
 #include <drm/drm_atomic_helper.h>
 
 /* ... (previous includes) ... */
