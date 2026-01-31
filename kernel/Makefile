@@ -1,17 +1,21 @@
 # Makefile for panel-ili9486
 
-# Default target for manual build
-all:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+ifneq ($(KERNELRELEASE),)
+# kbuild part of makefile
+obj-m := panel-ili9486.o
 
-# Dedicated target for DKMS to avoid KERNELRELEASE confusion
+else
+# normal makefile
+PWD := $(shell pwd)
+KERNEL_VER ?= $(shell uname -r)
+KDIR := /lib/modules/$(KERNEL_VER)/build
+
+all:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
+
 dkms:
-	make -C /lib/modules/$(KERNEL_VER)/build M=$(PWD) modules
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
 clean:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
-
-# Kbuild part: strictly for when invoked by kernel build system
-ifneq ($(KERNELRELEASE),)
-	obj-m += panel-ili9486.o
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
 endif
