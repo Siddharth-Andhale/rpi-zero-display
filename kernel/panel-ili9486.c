@@ -96,8 +96,19 @@ static int ili9486_init(struct mipi_dbi *dbi)
 	return 0;
 }
 
+/*
+ * Wrapper for mipi_dbi_pipe_enable which seems missing/hidden in 6.12
+ */
+static void ili9486_pipe_enable(struct drm_simple_display_pipe *pipe,
+				struct drm_crtc_state *crtc_state,
+				struct drm_plane_state *plane_state)
+{
+	struct mipi_dbi_dev *dbidev = drm_to_mipi_dbi_dev(pipe->crtc.dev);
+	mipi_dbi_enable_flush(&dbidev->dbi, crtc_state, plane_state);
+}
+
 static const struct drm_simple_display_pipe_funcs ili9486_pipe_funcs = {
-	.enable = mipi_dbi_pipe_enable,
+	.enable = ili9486_pipe_enable,
 	.disable = mipi_dbi_pipe_disable,
 	.update = mipi_dbi_pipe_update,
 };
