@@ -1,0 +1,78 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2835";
+
+	fragment@0 {
+		target = <&spi0>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target = <&spidev1>;
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target = <&gpio>;
+		__overlay__ {
+			xpt2046_pins: xpt2046_pins {
+				brcm,pins = <17>; /* IRQ pin */
+				brcm,function = <0>; /* in */
+				brcm,pull = <2>; /* up */
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&spi0>;
+		__overlay__ {
+			/* avoid dtc warning */
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			xpt2046: xpt2046@1 {
+				compatible = "ti,ads7846";
+				reg = <1>; /* CS1 */
+				
+				pinctrl-names = "default";
+				pinctrl-0 = <&xpt2046_pins>;
+
+				spi-max-frequency = <2000000>;
+				interrupts = <17 2>; /* high-to-low edge triggered */
+				interrupt-parent = <&gpio>;
+				pendown-gpio = <&gpio 17 1>; /* active low */
+
+				/* Default calibration, can be overridden */
+				touchscreen-min-x = <200>;
+				touchscreen-max-x = <3900>;
+				touchscreen-min-y = <200>;
+				touchscreen-max-y = <3900>;
+				touchscreen-max-pressure = <4096>;
+				touchscreen-fuzz-x = <0>;
+				touchscreen-fuzz-y = <0>;
+				touchscreen-fuzz-pressure = <0>;
+				touchscreen-inverted-x; 
+				touchscreen-inverted-y; 
+				/* touchscreen-swapped-x-y; */
+			};
+		};
+	};
+
+	__overrides__ {
+		speed =     <&xpt2046>,"spi-max-frequency:0";
+		penirq =    <&xpt2046>,"interrupts:0",
+		            <&xpt2046>,"pendown-gpio:4",
+		            <&xpt2046_pins>,"brcm,pins:0";
+		swapxy =    <&xpt2046>,"touchscreen-swapped-x-y?";
+		xmin =      <&xpt2046>,"touchscreen-min-x:0";
+		xmax =      <&xpt2046>,"touchscreen-max-x:0";
+		ymin =      <&xpt2046>,"touchscreen-min-y:0";
+		ymax =      <&xpt2046>,"touchscreen-max-y:0";
+	};
+};
