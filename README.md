@@ -23,6 +23,7 @@ This repository provides a **modern, DRM/KMS-based** solution for running ILI948
 
 2. Run the installer:
    ```bash
+   chmod +x scripts/*.sh
    sudo ./scripts/install.sh
    ```
 
